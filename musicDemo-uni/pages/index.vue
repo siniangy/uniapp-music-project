@@ -6,15 +6,25 @@
 		</view> -->
 		<view :title="singer">喜欢的歌手是：{{singer}}</view>
 		<button @click="changeSingerName">更换名字</button>
+		<view>
+			登录状态： {{isLogin}}
+		</view>
+		<navigator url="./login">去登录页</navigator>
 	</view>
 </template>
 
 <script>
+	import {
+		mapState
+	} from 'vuex'
 	export default {
 		data() {
 			return {
 				singer: '周杰伦'
 			}
+		},
+		computed: {
+			...mapState(['isLogin'])
 		},
 		onLoad() {
 
