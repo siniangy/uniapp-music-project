@@ -7,6 +7,12 @@
     "pages/mine/index"
   ],
   "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "网易云音乐",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
   "tabBar": {
     "color": "#888",
     "selectedColor": "#ff2419",
