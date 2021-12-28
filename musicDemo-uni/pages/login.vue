@@ -4,7 +4,7 @@
 			登录状态： {{isLogin}}
 		</view>
 		<button @click="handleLogin">登录</button>
-		<button @click="handleLogout">登出</button>
+		<button @click="handleLogout">登出1</button>
 		<navigator url="./index">去首页</navigator>
 	</view>
 </template>

@@ -1,0 +1,1 @@
+<view class="login"><view>{{'登录状态： '+isLogin+''}}</view><button data-event-opts="{{[['tap',[['handleLogin',['$event']]]]]}}" bindtap="__e">登录</button><button data-event-opts="{{[['tap',[['handleLogout',['$event']]]]]}}" bindtap="__e">登出1</button><navigator url="./index">去首页</navigator></view>
