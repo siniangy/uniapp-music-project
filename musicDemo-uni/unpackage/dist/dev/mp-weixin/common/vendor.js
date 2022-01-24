@@ -805,9 +805,15 @@ var customize = cached(function (str) {
 
 function initTriggerEvent(mpInstance) {
   var oldTriggerEvent = mpInstance.triggerEvent;
-  mpInstance.triggerEvent = function (event) {for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {args[_key3 - 1] = arguments[_key3];}
+  var newTriggerEvent = function newTriggerEvent(event) {for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {args[_key3 - 1] = arguments[_key3];}
     return oldTriggerEvent.apply(mpInstance, [customize(event)].concat(args));
   };
+  try {
+    // 京东小程序 triggerEvent 为只读
+    mpInstance.triggerEvent = newTriggerEvent;
+  } catch (error) {
+    mpInstance._triggerEvent = newTriggerEvent;
+  }
 }
 
 function initHook(name, options, isComponent) {
@@ -1981,17 +1987,17 @@ function createPlugin(vm) {
   var appOptions = parseApp(vm);
   if (isFn(appOptions.onShow) && wx.onAppShow) {
     wx.onAppShow(function () {for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {args[_key7] = arguments[_key7];}
-      appOptions.onShow.apply(vm, args);
+      vm.__call_hook('onShow', args);
     });
   }
   if (isFn(appOptions.onHide) && wx.onAppHide) {
     wx.onAppHide(function () {for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {args[_key8] = arguments[_key8];}
-      appOptions.onHide.apply(vm, args);
+      vm.__call_hook('onHide', args);
     });
   }
   if (isFn(appOptions.onLaunch)) {
     var args = wx.getLaunchOptionsSync && wx.getLaunchOptionsSync();
-    appOptions.onLaunch.call(vm, args);
+    vm.__call_hook('onLaunch', args);
   }
   return vm;
 }
@@ -7941,7 +7947,7 @@ function internalMixin(Vue) {
 
   Vue.prototype.$emit = function(event) {
     if (this.$scope && event) {
-      this.$scope['triggerEvent'](event, {
+      (this.$scope['_triggerEvent'] || this.$scope['triggerEvent'])(event, {
         __args__: toArray(arguments, 1)
       });
     }
@@ -10054,6 +10060,46 @@ module.exports = index_cjs;
 
 /***/ }),
 /* 14 */
+/*!******************************************************************************!*\
+  !*** E:/New/Code/Gayhub/uni-app-AccountBook/musicDemo-uni/common/js/util.js ***!
+  \******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var PubFuc = {
+  // 格式化时间戳
+  formatTime: function formatTime(value) {
+    var value = String(value);
+    function t(v) {
+      return v = v < 10 ? "0" + v : v;
+    }
+    String.prototype.ToString = function (value) {
+      var date = new Date(parseInt(this.substring(6, this.length - 2)));
+      value = value.replace("yyyy", date.getFullYear());
+      value = value.replace("yy", t(date.getFullYear().toString().substr(2)));
+      value = value.replace("MM", t(date.getMonth() + 1));
+      value = value.replace("dd", t(date.getDate()));
+      value = value.replace("hh", t(date.getHours()));
+      value = value.replace("mm", t(date.getMinutes()));
+      value = value.replace("ss", t(date.getSeconds()));
+      value = value.replace("ms", date.getMilliseconds());
+      return value;
+    };
+    return value.ToString("yyyy-MM-dd  hh:mm:ss");
+  } };var _default =
+
+
+PubFuc;exports.default = _default;
+
+/***/ }),
+/* 15 */,
+/* 16 */,
+/* 17 */,
+/* 18 */,
+/* 19 */,
+/* 20 */,
+/* 21 */
 /*!**************************************************************************!*\
   !*** E:/New/Code/Gayhub/uni-app-AccountBook/musicDemo-uni/apis/index.js ***!
   \**************************************************************************/
@@ -10061,7 +10107,7 @@ module.exports = index_cjs;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.apiGetBanner = apiGetBanner;var _index = _interopRequireDefault(__webpack_require__(/*! @/utils/request/index.js */ 15));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+Object.defineProperty(exports, "__esModule", { value: true });exports.apiGetBanner = apiGetBanner;var _index = _interopRequireDefault(__webpack_require__(/*! @/utils/request/index.js */ 22));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
 
 // 获取轮播图
 function apiGetBanner(data) {
@@ -10074,7 +10120,7 @@ function apiGetBanner(data) {
 }
 
 /***/ }),
-/* 15 */
+/* 22 */
 /*!***********************************************************************************!*\
   !*** E:/New/Code/Gayhub/uni-app-AccountBook/musicDemo-uni/utils/request/index.js ***!
   \***********************************************************************************/
@@ -10082,7 +10128,7 @@ function apiGetBanner(data) {
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 16));var _request = _interopRequireDefault(__webpack_require__(/*! ./request.js */ 19));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 23));var _request = _interopRequireDefault(__webpack_require__(/*! ./request.js */ 26));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}
 
 // need to change baseUrl
 var baseUrl =  true ? "http://localhost:3000" : undefined;
@@ -10176,17 +10222,17 @@ req;exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 16 */
+/* 23 */
 /*!**********************************************************!*\
   !*** ./node_modules/@babel/runtime/regenerator/index.js ***!
   \**********************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! regenerator-runtime */ 17);
+module.exports = __webpack_require__(/*! regenerator-runtime */ 24);
 
 /***/ }),
-/* 17 */
+/* 24 */
 /*!************************************************************!*\
   !*** ./node_modules/regenerator-runtime/runtime-module.js ***!
   \************************************************************/
@@ -10217,7 +10263,7 @@ var oldRuntime = hadRuntime && g.regeneratorRuntime;
 // Force reevalutation of runtime.js.
 g.regeneratorRuntime = undefined;
 
-module.exports = __webpack_require__(/*! ./runtime */ 18);
+module.exports = __webpack_require__(/*! ./runtime */ 25);
 
 if (hadRuntime) {
   // Restore the original runtime.
@@ -10233,7 +10279,7 @@ if (hadRuntime) {
 
 
 /***/ }),
-/* 18 */
+/* 25 */
 /*!*****************************************************!*\
   !*** ./node_modules/regenerator-runtime/runtime.js ***!
   \*****************************************************/
@@ -10964,7 +11010,7 @@ if (hadRuntime) {
 
 
 /***/ }),
-/* 19 */
+/* 26 */
 /*!*************************************************************************************!*\
   !*** E:/New/Code/Gayhub/uni-app-AccountBook/musicDemo-uni/utils/request/request.js ***!
   \*************************************************************************************/
@@ -10972,7 +11018,7 @@ if (hadRuntime) {
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 16));var _common = __webpack_require__(/*! ./common.js */ 20);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 23));var _common = __webpack_require__(/*! ./common.js */ 27);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}
 
 
 
@@ -11076,7 +11122,7 @@ var Request = /*#__PURE__*/function () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 20 */
+/* 27 */
 /*!************************************************************************************!*\
   !*** E:/New/Code/Gayhub/uni-app-AccountBook/musicDemo-uni/utils/request/common.js ***!
   \************************************************************************************/
@@ -11084,7 +11130,7 @@ var Request = /*#__PURE__*/function () {
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.requestConfig = requestConfig;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 16));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function requestConfig(_x, _x2) {return _requestConfig.apply(this, arguments);}function _requestConfig() {_requestConfig = _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee(ins, options) {var successHandler,failHandler,completeHandler,config,_cg,type,_args = arguments;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:successHandler = _args.length > 2 && _args[2] !== undefined ? _args[2] : null;failHandler = _args.length > 3 && _args[3] !== undefined ? _args[3] : null;completeHandler = _args.length > 4 && _args[4] !== undefined ? _args[4] : null;
+Object.defineProperty(exports, "__esModule", { value: true });exports.requestConfig = requestConfig;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 23));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function requestConfig(_x, _x2) {return _requestConfig.apply(this, arguments);}function _requestConfig() {_requestConfig = _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee(ins, options) {var successHandler,failHandler,completeHandler,config,_cg,type,_args = arguments;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:successHandler = _args.length > 2 && _args[2] !== undefined ? _args[2] : null;failHandler = _args.length > 3 && _args[3] !== undefined ? _args[3] : null;completeHandler = _args.length > 4 && _args[4] !== undefined ? _args[4] : null;
             // base
             ins.header = options.header || ins.header;
             ins.baseUrl = options.baseUrl || ins.baseUrl;
@@ -11136,44 +11182,6 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.requestCon
 function _isPromise(obj) {
   return obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
 }
-
-/***/ }),
-/* 21 */,
-/* 22 */,
-/* 23 */,
-/* 24 */,
-/* 25 */
-/*!******************************************************************************!*\
-  !*** E:/New/Code/Gayhub/uni-app-AccountBook/musicDemo-uni/common/js/util.js ***!
-  \******************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var PubFuc = {
-  // 格式化时间戳
-  formatTime: function formatTime(value) {
-    var value = String(value);
-    function t(v) {
-      return v = v < 10 ? "0" + v : v;
-    }
-    String.prototype.ToString = function (value) {
-      var date = new Date(parseInt(this.substring(6, this.length - 2)));
-      value = value.replace("yyyy", date.getFullYear());
-      value = value.replace("yy", t(date.getFullYear().toString().substr(2)));
-      value = value.replace("MM", t(date.getMonth() + 1));
-      value = value.replace("dd", t(date.getDate()));
-      value = value.replace("hh", t(date.getHours()));
-      value = value.replace("mm", t(date.getMinutes()));
-      value = value.replace("ss", t(date.getSeconds()));
-      value = value.replace("ms", date.getMilliseconds());
-      return value;
-    };
-    return value.ToString("yyyy-MM-dd  hh:mm:ss");
-  } };var _default =
-
-
-PubFuc;exports.default = _default;
 
 /***/ })
 ]]);
